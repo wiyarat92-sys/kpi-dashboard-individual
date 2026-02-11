@@ -1,0 +1,290 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>สรุปผลตรวจนับสต๊อก - พัฒนาสิน ไทยเทรดดิ้ง</title>
+    
+    <!-- Google Fonts: Sarabun for professional Thai look -->
+    <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;600;700&display=swap" rel="stylesheet">
+    
+    <!-- Tailwind CSS for styling -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Chart.js for Graphs -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    
+    <!-- Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+
+    <style>
+        body { font-family: 'Sarabun', sans-serif; background-color: #f3f4f6; }
+        .card { background: white; border-radius: 12px; box-shadow: 0 2px 4px rgba(0,0,0,0.05); transition: transform 0.2s; }
+        .card:hover { transform: translateY(-2px); box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
+    </style>
+</head>
+<body class="p-6">
+
+    <!-- Header -->
+    <header class="mb-8 flex flex-col md:flex-row justify-between items-center bg-white p-6 rounded-xl shadow-sm">
+        <div>
+            <h1 class="text-2xl font-bold text-gray-800">พัฒนาสิน ไทยเทรดดิ้ง (หน้าร้าน)</h1>
+            <p class="text-gray-500">สรุปการตรวจนับสินค้าคงคลัง หมวดหมู่ A สินค้าเกษตร | ประจำเดือน มกราคม</p>
+        </div>
+        <div class="mt-4 md:mt-0 text-right">
+            <div class="text-sm text-gray-500">วันที่ออกรายงาน</div>
+            <!-- Added ID 'currentDate' here to fix the previous error -->
+            <div class="font-semibold text-blue-600" id="currentDate"></div>
+        </div>
+    </header>
+
+    <!-- KPI Cards Row -->
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+        
+        <!-- Accuracy Card -->
+        <div class="card p-6 border-l-4 border-yellow-500">
+            <div class="flex justify-between items-start">
+                <div>
+                    <p class="text-sm text-gray-500 mb-1">ความแม่นยำ (Accuracy)</p>
+                    <h2 class="text-3xl font-bold text-gray-800">69%</h2>
+                    <p class="text-xs text-red-500 mt-2"><i class="fas fa-arrow-down"></i> ต่ำกว่าเป้าหมาย (90%)</p>
+                </div>
+                <div class="p-3 bg-yellow-100 rounded-full text-yellow-600">
+                    <i class="fas fa-crosshairs text-xl"></i>
+                </div>
+            </div>
+        </div>
+
+        <!-- Net Variance Card -->
+        <div class="card p-6 border-l-4 border-blue-500">
+            <div class="flex justify-between items-start">
+                <div>
+                    <p class="text-sm text-gray-500 mb-1">มูลค่ารวมสุทธิ (Net Variance)</p>
+                    <h2 class="text-3xl font-bold text-gray-800">10,434.34</h2>
+                    <p class="text-xs text-gray-400 mt-2">บาท (THB)</p>
+                </div>
+                <div class="p-3 bg-blue-100 rounded-full text-blue-600">
+                    <i class="fas fa-calculator text-xl"></i>
+                </div>
+            </div>
+        </div>
+
+        <!-- Shortage Value Card -->
+        <div class="card p-6 border-l-4 border-red-500">
+            <div class="flex justify-between items-start">
+                <div>
+                    <p class="text-sm text-gray-500 mb-1">มูลค่าของขาด (Shortage)</p>
+                    <h2 class="text-3xl font-bold text-red-600">9,074.37</h2>
+                    <p class="text-xs text-gray-500 mt-2">จำนวน 56 รายการ (286 ชิ้น)</p>
+                </div>
+                <div class="p-3 bg-red-100 rounded-full text-red-600">
+                    <i class="fas fa-minus-circle text-xl"></i>
+                </div>
+            </div>
+        </div>
+
+        <!-- Overage Value Card -->
+        <div class="card p-6 border-l-4 border-green-500">
+            <div class="flex justify-between items-start">
+                <div>
+                    <p class="text-sm text-gray-500 mb-1">มูลค่าของเกิน (Overage)</p>
+                    <h2 class="text-3xl font-bold text-green-600">1,359.97</h2>
+                    <p class="text-xs text-gray-500 mt-2">จำนวน 80 รายการ (63 ชิ้น)</p>
+                </div>
+                <div class="p-3 bg-green-100 rounded-full text-green-600">
+                    <i class="fas fa-plus-circle text-xl"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Charts & Analysis Row -->
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
+        
+        <!-- Chart 1: SKU Status -->
+        <div class="card p-6 col-span-1">
+            <h3 class="text-lg font-semibold mb-4 text-gray-700">สัดส่วนความถูกต้อง (SKU)</h3>
+            <div class="h-64 flex justify-center">
+                <canvas id="accuracyChart"></canvas>
+            </div>
+            <div class="mt-4 text-center">
+                <span class="text-sm text-gray-500">รายการตรง: 145 | ไม่ตรง: 136</span>
+            </div>
+        </div>
+
+        <!-- Analysis Section -->
+        <div class="card p-6 col-span-1 lg:col-span-2">
+            <h3 class="text-lg font-semibold mb-4 text-gray-700 border-b pb-2">วิเคราะห์สาเหตุและแนวทางแก้ไข (Root Cause Analysis)</h3>
+            
+            <div class="space-y-4">
+                <div class="flex items-start p-3 bg-red-50 rounded-lg">
+                    <div class="flex-shrink-0 mt-1">
+                        <i class="fas fa-exclamation-triangle text-red-500"></i>
+                    </div>
+                    <div class="ml-4">
+                        <h4 class="font-bold text-gray-800">1. สินค้าติดบาร์โค้ดสลับ (Labeling Error)</h4>
+                        <p class="text-sm text-gray-600 mt-1">
+                            <span class="font-semibold">สาเหตุ:</span> พนักงานติดสติ๊กเกอร์ผิด หรือสลับสินค้าที่มีลักษณะใกล้เคียงกัน ทำให้ตัดสต๊อกผิดรายการ<br>
+                            <span class="font-semibold text-blue-600">แนวทางแก้ไข:</span> ตรวจสอบบาร์โค้ดทุกครั้งก่อนรับเข้าชั้นวาง (Double Check) และสุ่มตรวจสินค้ากลุ่มเสี่ยงทุกสัปดาห์
+                        </p>
+                    </div>
+                </div>
+
+                <div class="flex items-start p-3 bg-orange-50 rounded-lg">
+                    <div class="flex-shrink-0 mt-1">
+                        <i class="fas fa-boxes text-orange-500"></i>
+                    </div>
+                    <div class="ml-4">
+                        <h4 class="font-bold text-gray-800">2. สินค้าขนาดเล็กวางปนกัน (Mixed Item Placement)</h4>
+                        <p class="text-sm text-gray-600 mt-1">
+                            <span class="font-semibold">สาเหตุ:</span> สินค้าชิ้นเล็ก (เช่น น็อต, อะไหล่) วางรวมกันในช่องเดียว ทำให้หยิบผิดหรือนับผิด<br>
+                            <span class="font-semibold text-blue-600">แนวทางแก้ไข:</span> ทำฉากกั้น (Divider) แบ่งช่องสินค้าให้ชัดเจน และติดป้ายระบุชื่อสินค้าหน้าช่องวางให้ตรง
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Tables Section -->
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        
+        <!-- Top Shortage Table -->
+        <div class="card overflow-hidden">
+            <div class="p-4 bg-red-50 border-b border-red-100 flex justify-between items-center">
+                <h3 class="text-red-700 font-bold"><i class="fas fa-arrow-down mr-2"></i>รายการสินค้าขาด (Shortage Highlights)</h3>
+            </div>
+            <div class="overflow-x-auto">
+                <table class="w-full text-sm text-left text-gray-600">
+                    <thead class="text-xs text-gray-700 uppercase bg-gray-50">
+                        <tr>
+                            <th class="px-4 py-3">ชื่อสินค้า</th>
+                            <th class="px-4 py-3 text-center">คงเหลือ</th>
+                            <th class="px-4 py-3 text-center">ที่นับได้</th>
+                            <th class="px-4 py-3 text-right text-red-600">ผลต่าง</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr class="bg-white border-b hover:bg-gray-50">
+                            <td class="px-4 py-3 font-medium text-gray-900">ตาข่ายกันนก สีบรอนซ์เงิน ขนาด 1ม.*30ม.</td>
+                            <td class="px-4 py-3 text-center">200</td>
+                            <td class="px-4 py-3 text-center">100</td>
+                            <td class="px-4 py-3 text-right text-red-600 font-bold">-100</td>
+                        </tr>
+                        <tr class="bg-white border-b hover:bg-gray-50">
+                            <td class="px-4 py-3 font-medium text-gray-900">ซีล V ต้น 767</td>
+                            <td class="px-4 py-3 text-center">76</td>
+                            <td class="px-4 py-3 text-center">24</td>
+                            <td class="px-4 py-3 text-right text-red-600 font-bold">-52</td>
+                        </tr>
+                        <tr class="bg-white border-b hover:bg-gray-50">
+                            <td class="px-4 py-3 font-medium text-gray-900">ตาข่ายพีวีซี หกเหลี่ยม 9 มิล (เขียว)</td>
+                            <td class="px-4 py-3 text-center">48</td>
+                            <td class="px-4 py-3 text-center">30</td>
+                            <td class="px-4 py-3 text-right text-red-600 font-bold">-18</td>
+                        </tr>
+                        <tr class="bg-white border-b hover:bg-gray-50">
+                            <td class="px-4 py-3 font-medium text-gray-900">ยางกดน้ำมัน(สีใส)</td>
+                            <td class="px-4 py-3 text-center">81</td>
+                            <td class="px-4 py-3 text-center">68</td>
+                            <td class="px-4 py-3 text-right text-red-600 font-bold">-13</td>
+                        </tr>
+                        <tr class="bg-white hover:bg-gray-50">
+                            <td class="px-4 py-3 font-medium text-gray-900">ตาข่ายกรองแสง 60% (เขียว)</td>
+                            <td class="px-4 py-3 text-center">11</td>
+                            <td class="px-4 py-3 text-center">0</td>
+                            <td class="px-4 py-3 text-right text-red-600 font-bold">-11</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Top Overage Table -->
+        <div class="card overflow-hidden">
+            <div class="p-4 bg-green-50 border-b border-green-100 flex justify-between items-center">
+                <h3 class="text-green-700 font-bold"><i class="fas fa-arrow-up mr-2"></i>รายการสินค้าเกิน (Overage Highlights)</h3>
+            </div>
+            <div class="overflow-x-auto">
+                <table class="w-full text-sm text-left text-gray-600">
+                    <thead class="text-xs text-gray-700 uppercase bg-gray-50">
+                        <tr>
+                            <th class="px-4 py-3">ชื่อสินค้า</th>
+                            <th class="px-4 py-3 text-center">คงเหลือ</th>
+                            <th class="px-4 py-3 text-center">ที่นับได้</th>
+                            <th class="px-4 py-3 text-right text-green-600">ผลต่าง</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr class="bg-white border-b hover:bg-gray-50">
+                            <td class="px-4 py-3 font-medium text-gray-900">ยางกันจาระบี 767 ไส้เหล็ก</td>
+                            <td class="px-4 py-3 text-center">26</td>
+                            <td class="px-4 py-3 text-center">76</td>
+                            <td class="px-4 py-3 text-right text-green-600 font-bold">+50</td>
+                        </tr>
+                        <tr class="bg-white border-b hover:bg-gray-50">
+                            <td class="px-4 py-3 font-medium text-gray-900">เสียมตราเพชร กว้าง 2" เหล็กธรรมดา</td>
+                            <td class="px-4 py-3 text-center">4</td>
+                            <td class="px-4 py-3 text-center">8</td>
+                            <td class="px-4 py-3 text-right text-green-600 font-bold">+4</td>
+                        </tr>
+                        <tr class="bg-white border-b hover:bg-gray-50">
+                            <td class="px-4 py-3 font-medium text-gray-900">เสื้อสูบซ้าย/ขวา 767 ทองเหลือง</td>
+                            <td class="px-4 py-3 text-center">0</td>
+                            <td class="px-4 py-3 text-center">2</td>
+                            <td class="px-4 py-3 text-right text-green-600 font-bold">+2</td>
+                        </tr>
+                        <tr class="bg-white border-b hover:bg-gray-50">
+                            <td class="px-4 py-3 font-medium text-gray-900">บังใบตัดหญ้า ตราดอกบัว P-100</td>
+                            <td class="px-4 py-3 text-center">18</td>
+                            <td class="px-4 py-3 text-center">20</td>
+                            <td class="px-4 py-3 text-right text-green-600 font-bold">+2</td>
+                        </tr>
+                         <tr class="bg-white hover:bg-gray-50">
+                            <td class="px-4 py-3 font-medium text-gray-900">ใบตัดหญ้า 10"x24T Mato</td>
+                            <td class="px-4 py-3 text-center">6</td>
+                            <td class="px-4 py-3 text-center">7</td>
+                            <td class="px-4 py-3 text-right text-green-600 font-bold">+1</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+    </div>
+
+    <script>
+        // Set Current Date - This script requires the element with id="currentDate"
+        const dateOptions = { year: 'numeric', month: 'long', day: 'numeric', weekday: 'long' };
+        const dateElement = document.getElementById('currentDate');
+        if (dateElement) {
+            dateElement.innerText = new Date().toLocaleDateString('th-TH', dateOptions);
+        } else {
+            console.warn("Element with id 'currentDate' not found.");
+        }
+
+        // Chart 1: Accuracy Doughnut Chart
+        const ctxAccuracy = document.getElementById('accuracyChart').getContext('2d');
+        new Chart(ctxAccuracy, {
+            type: 'doughnut',
+            data: {
+                labels: ['รายการที่ตรง (Correct)', 'รายการที่ไม่ตรง (Variance)'],
+                datasets: [{
+                    data: [145, 64], // Total 209 items. 145 Correct. 209-145 = 64 Variance
+                    backgroundColor: ['#10B981', '#F59E0B'],
+                    hoverOffset: 4
+                }]
+            },
+            options: {
+                responsive: true,
+                plugins: {
+                    legend: {
+                        position: 'bottom',
+                        labels: { font: { family: 'Sarabun' } }
+                    }
+                }
+            }
+        });
+    </script>
+</body>
+</html>

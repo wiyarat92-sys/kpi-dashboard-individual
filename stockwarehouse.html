@@ -1,0 +1,349 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PTS Inventory Dashboard - มกราคม</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <!-- Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" />
+
+    <style>
+        body { font-family: 'Sarabun', sans-serif; background-color: #f3f4f6; }
+        .card { background: white; border-radius: 12px; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1); transition: transform 0.2s; }
+        .card:hover { transform: translateY(-2px); }
+        .bg-gradient-header { background: linear-gradient(135deg, #1e3a8a 0%, #3b82f6 100%); }
+        /* Custom Scrollbar for table */
+        ::-webkit-scrollbar { width: 8px; height: 8px; }
+        ::-webkit-scrollbar-track { background: #f1f1f1; }
+        ::-webkit-scrollbar-thumb { background: #888; border-radius: 4px; }
+        ::-webkit-scrollbar-thumb:hover { background: #555; }
+    </style>
+</head>
+<body class="text-gray-700 flex flex-col min-h-screen">
+
+    <!-- Header -->
+    <div class="bg-gradient-header text-white p-6 shadow-lg">
+        <div class="container mx-auto flex flex-col md:flex-row justify-between items-center">
+            <div class="mb-4 md:mb-0 text-center md:text-left">
+                <h1 class="text-2xl font-bold"><i class="fas fa-warehouse mr-2"></i> พัฒนาสิน ไทยเทรดดิ้ง (PTS)</h1>
+                <p class="opacity-90 mt-1">สรุปการตรวจนับสินค้าคงคลัง (โกดัง) ประจำเดือน มกราคม</p>
+            </div>
+            <div class="text-center md:text-right">
+                <div class="text-sm opacity-80">วันที่ออกรายงาน</div>
+                <div class="font-bold text-lg" id="currentDate"></div>
+            </div>
+        </div>
+    </div>
+
+    <div class="container mx-auto p-4 md:p-6 flex-grow">
+        
+        <!-- Top Stats Row -->
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6 mb-8">
+            <!-- Total Items -->
+            <div class="card p-5 border-l-4 border-blue-500">
+                <div class="flex justify-between items-start">
+                    <div>
+                        <p class="text-sm text-gray-500 mb-1">รายการที่ตรวจนับรวม</p>
+                        <h3 class="text-3xl font-bold text-gray-800">305</h3>
+                        <p class="text-xs text-gray-400 mt-1">SKUs</p>
+                    </div>
+                    <div class="p-3 bg-blue-100 rounded-full text-blue-600">
+                        <i class="fas fa-boxes fa-lg"></i>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Accuracy -->
+            <div class="card p-5 border-l-4 border-yellow-500">
+                <div class="flex justify-between items-start">
+                    <div>
+                        <p class="text-sm text-gray-500 mb-1">ความแม่นยำ (Accuracy)</p>
+                        <h3 class="text-3xl font-bold text-yellow-600">72%</h3>
+                        <p class="text-xs text-red-500 mt-1"><i class="fas fa-arrow-down"></i> ต่ำกว่าเป้าหมาย (80%)</p>
+                    </div>
+                    <div class="p-3 bg-yellow-100 rounded-full text-yellow-600">
+                        <i class="fas fa-crosshairs fa-lg"></i>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Value Variance (Short) -->
+            <div class="card p-5 border-l-4 border-red-500">
+                <div class="flex justify-between items-start">
+                    <div>
+                        <p class="text-sm text-gray-500 mb-1">มูลค่า Stock ขาด (Short)</p>
+                        <h3 class="text-2xl font-bold text-red-600">17,976.01 ฿</h3>
+                        <p class="text-xs text-gray-400 mt-1">รวมทั้ง 2 หมวด</p>
+                    </div>
+                    <div class="p-3 bg-red-100 rounded-full text-red-600">
+                        <i class="fas fa-minus-circle fa-lg"></i>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Value Variance (Over) -->
+            <div class="card p-5 border-l-4 border-green-500">
+                <div class="flex justify-between items-start">
+                    <div>
+                        <p class="text-sm text-gray-500 mb-1">มูลค่า Stock เกิน (Over)</p>
+                        <h3 class="text-2xl font-bold text-green-600">15,675.23 ฿</h3>
+                        <p class="text-xs text-gray-400 mt-1">รวมทั้ง 2 หมวด</p>
+                    </div>
+                    <div class="p-3 bg-green-100 rounded-full text-green-600">
+                        <i class="fas fa-plus-circle fa-lg"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Charts Row -->
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
+            <!-- Pie Chart: Overall Accuracy -->
+            <div class="card p-6">
+                <h3 class="text-lg font-bold mb-4 border-b pb-2">สัดส่วนความถูกต้อง (ทั้งหมด)</h3>
+                <div class="relative h-64 w-full">
+                    <canvas id="accuracyChart"></canvas>
+                </div>
+                <div class="mt-4 text-center text-sm">
+                    <span class="inline-block w-3 h-3 bg-green-500 rounded-full mr-1"></span> รายการตรง (219)
+                    <span class="inline-block w-3 h-3 bg-red-500 rounded-full ml-3 mr-1"></span> รายการ Diff (86)
+                </div>
+            </div>
+
+            <!-- Bar Chart: Category Comparison -->
+            <div class="card p-6 lg:col-span-2">
+                <h3 class="text-lg font-bold mb-4 border-b pb-2">เปรียบเทียบผลการนับแยกหมวดหมู่</h3>
+                <div class="relative h-64 w-full">
+                    <canvas id="categoryChart"></canvas>
+                </div>
+            </div>
+        </div>
+
+        <!-- Detailed Analysis Section -->
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+            
+            <!-- Category A: Agriculture -->
+            <div class="card p-0 overflow-hidden">
+                <div class="bg-yellow-100 p-4 border-b border-yellow-200 flex justify-between items-center">
+                    <h3 class="font-bold text-yellow-800"><i class="fas fa-tractor mr-2"></i>หมวด A: สินค้าเกษตร</h3>
+                    <span class="bg-white text-yellow-800 text-xs font-bold px-2 py-1 rounded">Target: 80%</span>
+                </div>
+                <div class="p-6">
+                    <div class="flex justify-between mb-2">
+                        <span>ความแม่นยำ:</span>
+                        <span class="font-bold text-green-600">81% <i class="fas fa-check-circle"></i></span>
+                    </div>
+                    <div class="w-full bg-gray-200 rounded-full h-4 mb-4">
+                        <div class="bg-yellow-500 h-4 rounded-full" style="width: 81%"></div>
+                    </div>
+                    
+                    <div class="grid grid-cols-2 gap-4 text-sm mb-4">
+                        <div class="bg-gray-50 p-3 rounded">
+                            <p class="text-gray-500">ตรวจสอบ</p>
+                            <p class="font-bold">170 SKU</p>
+                        </div>
+                        <div class="bg-gray-50 p-3 rounded">
+                            <p class="text-gray-500">คลาดเคลื่อน</p>
+                            <p class="font-bold text-red-500">32 SKU</p>
+                        </div>
+                    </div>
+                    
+                    <div class="bg-red-50 border border-red-100 rounded p-4 text-sm">
+                        <h4 class="font-bold mb-2 text-red-700"><i class="fas fa-exclamation-triangle mr-1"></i> ปัญหาที่พบ:</h4>
+                        <ul class="list-disc pl-5 space-y-1 text-gray-600">
+                            <li><strong>บรรจุภัณฑ์ชำรุด:</strong> กล่อง/ห่อเสียหาย ทำให้นับยาก</li>
+                            <li><strong>การจัดวาง:</strong> สินค้าวางไม่เป็นระเบียบ ปะปนกัน</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Category: PVC Pipe -->
+            <div class="card p-0 overflow-hidden">
+                <div class="bg-blue-100 p-4 border-b border-blue-200 flex justify-between items-center">
+                    <h3 class="font-bold text-blue-800"><i class="fas fa-tint mr-2"></i>หมวด: ท่อพีวีซี</h3>
+                    <span class="bg-white text-blue-800 text-xs font-bold px-2 py-1 rounded">Target: 80%</span>
+                </div>
+                <div class="p-6">
+                    <div class="flex justify-between mb-2">
+                        <span>ความแม่นยำ:</span>
+                        <span class="font-bold text-red-600">60% <i class="fas fa-times-circle"></i></span>
+                    </div>
+                    <div class="w-full bg-gray-200 rounded-full h-4 mb-4">
+                        <div class="bg-blue-500 h-4 rounded-full" style="width: 60%"></div>
+                    </div>
+                    
+                    <div class="grid grid-cols-2 gap-4 text-sm mb-4">
+                        <div class="bg-gray-50 p-3 rounded">
+                            <p class="text-gray-500">ตรวจสอบ</p>
+                            <p class="font-bold">135 SKU</p>
+                        </div>
+                        <div class="bg-gray-50 p-3 rounded">
+                            <p class="text-gray-500">คลาดเคลื่อน</p>
+                            <p class="font-bold text-red-500">54 SKU</p>
+                        </div>
+                    </div>
+
+                    <div class="bg-red-50 border border-red-100 rounded p-4 text-sm">
+                        <h4 class="font-bold mb-2 text-red-700"><i class="fas fa-search mr-1"></i> สาเหตุหลัก (PVC):</h4>
+                        <ul class="list-disc pl-5 space-y-1 text-gray-600">
+                            <li><strong>หน่วยนับ:</strong> สับสนระหว่าง เส้น/มัด</li>
+                            <li><strong>การตัดจ่าย:</strong> ตัด Stock ไม่ทันการหยิบสินค้าจริง</li>
+                            <li><strong>พื้นที่จัดเก็บ:</strong> สินค้ายาว เก็บยาก ตรวจนับลำบาก</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Problem & Solution Table -->
+        <div class="card p-6 mb-8">
+            <h3 class="text-lg font-bold mb-4 flex items-center justify-between">
+                <span><i class="fas fa-clipboard-list text-blue-600 mr-2"></i> รายการที่มีผลต่างสูง (High Variance Items)</span>
+                <span class="text-xs font-normal text-gray-500 bg-gray-100 px-2 py-1 rounded">ข้อมูลจริงจากระบบ</span>
+            </h3>
+            <div class="overflow-x-auto">
+                <table class="min-w-full text-sm text-left text-gray-500">
+                    <thead class="text-xs text-gray-700 uppercase bg-gray-100">
+                        <tr>
+                            <th scope="col" class="px-6 py-3 whitespace-nowrap">รหัสสินค้า</th>
+                            <th scope="col" class="px-6 py-3 min-w-[200px]">ชื่อสินค้า</th>
+                            <th scope="col" class="px-6 py-3 text-center">คงเหลือ (ระบบ)</th>
+                            <th scope="col" class="px-6 py-3 text-center">ที่นับได้</th>
+                            <th scope="col" class="px-6 py-3 text-center">ผลต่าง</th>
+                            <th scope="col" class="px-6 py-3 text-center">สถานะ</th>
+                        </tr>
+                    </thead>
+                    <tbody class="bg-white border-b">
+                        <!-- PVC Items from Image 3 -->
+                        <tr class="hover:bg-gray-50 border-b">
+                            <td class="px-6 py-4 font-medium">P0-0701</td>
+                            <td class="px-6 py-4">ท่อพีวีซี 1/2" ชั้น 8.5 ปลายเรียบ ตราเพชร (2561)</td>
+                            <td class="px-6 py-4 text-center">13,435</td>
+                            <td class="px-6 py-4 text-center">13,640</td>
+                            <td class="px-6 py-4 text-center text-green-600 font-bold">+205</td>
+                            <td class="px-6 py-4 text-center"><span class="bg-green-100 text-green-800 text-xs font-medium px-2.5 py-0.5 rounded">เกิน (Over)</span></td>
+                        </tr>
+                        <tr class="hover:bg-gray-50 border-b">
+                            <td class="px-6 py-4 font-medium">P0-1301</td>
+                            <td class="px-6 py-4">ท่อพีวีซี 1/2" ชั้น 8.5 ปลายเรียบ ตราดาว (25)</td>
+                            <td class="px-6 py-4 text-center">526</td>
+                            <td class="px-6 py-4 text-center">375</td>
+                            <td class="px-6 py-4 text-center text-red-600 font-bold">-151</td>
+                            <td class="px-6 py-4 text-center"><span class="bg-red-100 text-red-800 text-xs font-medium px-2.5 py-0.5 rounded">ขาด (Short)</span></td>
+                        </tr>
+                        <tr class="hover:bg-gray-50 border-b">
+                            <td class="px-6 py-4 font-medium">P0-3007</td>
+                            <td class="px-6 py-4">ท่อพีวีซีเทา 1/2" ห้าดาว (50)</td>
+                            <td class="px-6 py-4 text-center">598</td>
+                            <td class="px-6 py-4 text-center">551</td>
+                            <td class="px-6 py-4 text-center text-red-600 font-bold">-47</td>
+                            <td class="px-6 py-4 text-center"><span class="bg-red-100 text-red-800 text-xs font-medium px-2.5 py-0.5 rounded">ขาด (Short)</span></td>
+                        </tr>
+                        
+                        <!-- Agri Items from Image 4 -->
+                         <tr class="hover:bg-gray-50 border-b">
+                            <td class="px-6 py-4 font-medium">A1-0058</td>
+                            <td class="px-6 py-4">สายเอ็น #60 (6 ม้วน)</td>
+                            <td class="px-6 py-4 text-center">114</td>
+                            <td class="px-6 py-4 text-center">144</td>
+                            <td class="px-6 py-4 text-center text-green-600 font-bold">+30</td>
+                            <td class="px-6 py-4 text-center"><span class="bg-green-100 text-green-800 text-xs font-medium px-2.5 py-0.5 rounded">เกิน (Over)</span></td>
+                        </tr>
+                        <tr class="hover:bg-gray-50 border-b">
+                            <td class="px-6 py-4 font-medium">A2-0015-01</td>
+                            <td class="px-6 py-4">ตาข่ายพีวีซี 6 เหลี่ยม 9 มิล (เขียว) 30 เมตร</td>
+                            <td class="px-6 py-4 text-center">210</td>
+                            <td class="px-6 py-4 text-center">180</td>
+                            <td class="px-6 py-4 text-center text-red-600 font-bold">-30</td>
+                            <td class="px-6 py-4 text-center"><span class="bg-red-100 text-red-800 text-xs font-medium px-2.5 py-0.5 rounded">ขาด (Short)</span></td>
+                        </tr>
+                         <tr class="hover:bg-gray-50 border-b">
+                            <td class="px-6 py-4 font-medium">A1-0059</td>
+                            <td class="px-6 py-4">สายเอ็น #70 (6 ม้วน)</td>
+                            <td class="px-6 py-4 text-center">132</td>
+                            <td class="px-6 py-4 text-center">120</td>
+                            <td class="px-6 py-4 text-center text-red-600 font-bold">-12</td>
+                            <td class="px-6 py-4 text-center"><span class="bg-red-100 text-red-800 text-xs font-medium px-2.5 py-0.5 rounded">ขาด (Short)</span></td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+            
+        </div>
+
+    </div>
+
+    <footer class="bg-gray-800 text-white text-center p-4 mt-auto">
+        <p class="text-sm">© Pattanasin Thai Trading | ระบบจัดการคลังสินค้า</p>
+    </footer>
+
+    <!-- Scripts for Charts -->
+    <script>
+        // Set Date
+        const dateOptions = { year: 'numeric', month: 'long', day: 'numeric' };
+        document.getElementById('currentDate').textContent = new Date().toLocaleDateString('th-TH', dateOptions);
+
+        // Chart 1: Overall Accuracy (Pie Chart)
+        const ctxAccuracy = document.getElementById('accuracyChart').getContext('2d');
+        new Chart(ctxAccuracy, {
+            type: 'doughnut',
+            data: {
+                labels: ['รายการที่ตรง (Correct)', 'รายการที่ไม่ตรง (Variance)'],
+                datasets: [{
+                    data: [219, 86],
+                    backgroundColor: ['#10B981', '#EF4444'], // Green, Red
+                    hoverOffset: 4
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        position: 'bottom',
+                    }
+                }
+            }
+        });
+
+        // Chart 2: Category Comparison (Bar Chart)
+        const ctxCategory = document.getElementById('categoryChart').getContext('2d');
+        new Chart(ctxCategory, {
+            type: 'bar',
+            data: {
+                labels: ['สินค้าเกษตร (Category A)', 'ท่อพีวีซี (PVC)'],
+                datasets: [
+                    {
+                        label: 'จำนวนรายการที่นับ',
+                        data: [170, 135],
+                        backgroundColor: '#E5E7EB', // Gray
+                        borderRadius: 5
+                    },
+                    {
+                        label: 'รายการที่ถูกต้อง',
+                        data: [138, 81],
+                        backgroundColor: '#3B82F6', // Blue
+                        borderRadius: 5
+                    }
+                ]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                scales: {
+                    y: {
+                        beginAtZero: true
+                    }
+                }
+            }
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,251 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard สรุปยอดขายลูกค้าใหม่ - พัฒนาสิน ไทยเทรดดิ้ง</title>
+    <!-- Tailwind CSS for modern UI styling -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Chart.js for data visualization -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <!-- Thai Google Font: Sarabun -->
+    <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Sarabun', sans-serif;
+            background-color: #f1f5f9;
+        }
+        .chart-container {
+            position: relative;
+            height: 320px;
+            width: 100%;
+        }
+        /* Printing optimizations */
+        @media print {
+            .no-print {
+                display: none !important;
+            }
+            body {
+                background-color: white !important;
+            }
+            .card-shadow {
+                box-shadow: none !important;
+                border: 1px solid #e2e8f0 !important;
+            }
+            main {
+                padding: 0 !important;
+            }
+        }
+    </style>
+</head>
+<body class="text-slate-800">
+
+    <div class="min-h-screen flex flex-col">
+        <!-- Navigation / Header -->
+        <nav class="bg-blue-900 text-white p-6 shadow-xl no-print">
+            <div class="container mx-auto flex flex-col md:flex-row justify-between items-center gap-4">
+                <div class="flex items-center gap-3">
+                    <div class="bg-white p-2 rounded-lg">
+                        <svg class="w-8 h-8 text-blue-900" fill="currentColor" viewBox="0 0 20 20"><path d="M2 10a8 8 0 018-8v8h8a8 8 0 11-16 0z"></path><path d="M12 2.252A8.014 8.014 0 0117.748 8H12V2.252z"></path></svg>
+                    </div>
+                    <div>
+                        <h1 class="text-xl font-bold leading-tight">บริษัท พัฒนาสิน ไทยเทรดดิ้ง จำกัด</h1>
+                        <p class="text-blue-300 text-sm italic">สรุปผลการดำเนินงานลูกค้าใหม่ 2569</p>
+                    </div>
+                </div>
+                <div class="flex items-center gap-4">
+                    <div class="text-right hidden md:block">
+                        <p class="text-xs text-blue-300 uppercase font-semibold">รอบบัญชี</p>
+                        <p class="text-sm font-bold">มกราคม 2569</p>
+                    </div>
+                    <button onclick="window.print()" class="bg-emerald-500 hover:bg-emerald-600 text-white px-5 py-2.5 rounded-xl font-bold shadow-lg transition-all flex items-center gap-2 transform hover:scale-105 active:scale-95">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9V2h12v7"></path><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"></path><rect x="6" y="14" width="12" height="8"></rect></svg>
+                        พิมพ์ / บันทึก PDF
+                    </button>
+                </div>
+            </div>
+        </nav>
+
+        <!-- Main Content Area -->
+        <main class="container mx-auto p-4 md:p-8 flex-grow">
+            
+            <!-- Performance Summary Cards -->
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+                <!-- Sales vs Target Card -->
+                <div class="bg-white rounded-2xl shadow-sm p-6 card-shadow border-t-4 border-blue-600">
+                    <div class="flex justify-between items-start mb-4">
+                        <p class="text-sm text-slate-400 font-bold uppercase tracking-wider">ยอดขายจริง / เป้าหมาย</p>
+                        <span class="bg-blue-50 text-blue-600 p-2 rounded-full">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                        </span>
+                    </div>
+                    <div class="flex items-baseline gap-2">
+                        <h2 class="text-3xl font-black text-slate-800 tracking-tight">฿127,906</h2>
+                        <span class="text-slate-400 font-medium text-lg">/ 1.6M</span>
+                    </div>
+                    <!-- Modern Progress Bar -->
+                    <div class="mt-5">
+                        <div class="flex justify-between text-[10px] mb-1 font-bold text-blue-600">
+                            <span>ความคืบหน้า</span>
+                            <span>7.99%</span>
+                        </div>
+                        <div class="w-full bg-slate-100 rounded-full h-3 overflow-hidden">
+                            <div class="bg-gradient-to-r from-blue-500 to-blue-700 h-full rounded-full transition-all duration-1000" style="width: 7.99%"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Customer Acquisition Card -->
+                <div class="bg-white rounded-2xl shadow-sm p-6 card-shadow border-t-4 border-emerald-500">
+                    <div class="flex justify-between items-start mb-4">
+                        <p class="text-sm text-slate-400 font-bold uppercase tracking-wider">จำนวนลูกค้าใหม่</p>
+                        <span class="bg-emerald-50 text-emerald-600 p-2 rounded-full">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z"></path></svg>
+                        </span>
+                    </div>
+                    <h2 class="text-4xl font-black text-slate-800">3 <span class="text-base font-normal text-slate-400">ราย</span></h2>
+                    <div class="mt-4 flex items-center text-xs text-emerald-600 font-bold bg-emerald-50 w-fit px-2 py-1 rounded-md">
+                        <svg class="w-3 h-3 mr-1" fill="currentColor" viewBox="0 0 20 20"><path d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"></path></svg>
+                        บรรลุเป้าหมายการขยายฐาน
+                    </div>
+                </div>
+
+                <!-- achievement status Card -->
+                <div class="bg-white rounded-2xl shadow-sm p-6 card-shadow border-t-4 border-orange-500">
+                    <div class="flex justify-between items-start mb-4">
+                        <p class="text-sm text-slate-400 font-bold uppercase tracking-wider">สถานะเป้าหมาย (Gap)</p>
+                        <span class="bg-orange-50 text-orange-600 p-2 rounded-full">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"></path></svg>
+                        </span>
+                    </div>
+                    <div class="text-orange-600 font-black text-3xl">- ฿1,472,094</div>
+                    <p class="text-[11px] text-slate-400 mt-4 leading-tight uppercase font-semibold">ยอดคงเหลือที่ต้องจัดทำเพิ่มเพื่อให้บรรลุเป้าหมายรายเดือน</p>
+                </div>
+            </div>
+
+            <!-- Detailed Visualizations -->
+            <div class="grid grid-cols-1 lg:grid-cols-5 gap-8 mb-8">
+                <!-- Sales Breakdown Chart -->
+                <div class="bg-white p-6 rounded-2xl shadow-sm lg:col-span-2 card-shadow">
+                    <h3 class="text-lg font-bold mb-6 flex items-center text-slate-700">
+                        <span class="w-2 h-6 bg-blue-600 rounded mr-3"></span>
+                        สัดส่วนยอดซื้อลูกค้ารายบุคคล
+                    </h3>
+                    <div class="chart-container">
+                        <canvas id="salesChart"></canvas>
+                    </div>
+                </div>
+
+                <!-- Sales Table -->
+                <div class="bg-white p-6 rounded-2xl shadow-sm lg:col-span-3 overflow-hidden card-shadow">
+                    <div class="flex justify-between items-center mb-6">
+                        <h3 class="text-lg font-bold text-slate-700">รายละเอียดลูกค้า (มกราคม 2569)</h3>
+                        <div class="text-[10px] bg-slate-100 px-2 py-1 rounded font-bold text-slate-400 no-print">LATEST UPDATE: 11 FEB 2026</div>
+                    </div>
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-left">
+                            <thead>
+                                <tr class="text-slate-400 text-[10px] border-b uppercase font-black tracking-widest">
+                                    <th class="py-3 text-center">อันดับ</th>
+                                    <th class="py-3 px-4">รายชื่อลูกค้า</th>
+                                    <th class="py-3 text-right">ยอดซื้อสุทธิ (บาท)</th>
+                                </tr>
+                            </thead>
+                            <tbody class="divide-y divide-slate-50 text-sm">
+                                <tr class="hover:bg-blue-50/50 transition-all cursor-default group">
+                                    <td class="py-4 text-center font-bold text-blue-600">01</td>
+                                    <td class="py-4 px-4 font-bold text-slate-700 group-hover:text-blue-700 transition-colors">คุณธีรพงศ์ จันเลียง</td>
+                                    <td class="py-4 text-right font-black text-slate-800">110,653.00</td>
+                                </tr>
+                                <tr class="hover:bg-blue-50/50 transition-all cursor-default group">
+                                    <td class="py-4 text-center font-bold text-slate-300">02</td>
+                                    <td class="py-4 px-4 font-medium text-slate-600">ร้านปักกีอุปกรณ์</td>
+                                    <td class="py-4 text-right font-bold text-slate-600">13,376.00</td>
+                                </tr>
+                                <tr class="hover:bg-blue-50/50 transition-all cursor-default group">
+                                    <td class="py-4 text-center font-bold text-slate-300">03</td>
+                                    <td class="py-4 px-4 font-medium text-slate-600">ร้านแดงเจริญการช่าง</td>
+                                    <td class="py-4 text-right font-bold text-slate-600">3,877.00</td>
+                                </tr>
+                            </tbody>
+                            <tfoot>
+                                <tr class="bg-blue-50/50 font-bold border-t-2 border-blue-100">
+                                    <td colspan="2" class="py-4 px-4 text-right text-blue-900 uppercase">Grand Total (ยอดรวม)</td>
+                                    <td class="py-4 text-right text-blue-900 px-2 text-xl tracking-tighter">฿127,906.00</td>
+                                </tr>
+                            </tfoot>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </main>
+
+        <!-- Footer -->
+        <footer class="bg-white border-t p-6 text-center text-slate-400 text-xs no-print">
+            © 2026 บริษัท พัฒนาสิน ไทยเทรดดิ้ง จำกัด | รายงานสรุปยอดขายภายใน | <span class="font-bold">Confidential</span>
+        </footer>
+    </div>
+
+    <script>
+        // Data Configuration
+        const labels = ["คุณธีรพงศ์ จันเลียง", "ร้านปักกีอุปกรณ์", "ร้านแดงเจริญการช่าง"];
+        const dataValues = [110653.00, 13376.00, 3877.00];
+
+        // Chart.js implementation
+        const ctx = document.getElementById('salesChart').getContext('2d');
+        new Chart(ctx, {
+            type: 'doughnut',
+            data: {
+                labels: labels,
+                datasets: [{
+                    label: 'ยอดซื้อสุทธิ',
+                    data: dataValues,
+                    backgroundColor: [
+                        '#1e3a8a', // Dark Blue
+                        '#3b82f6', // Bright Blue
+                        '#cbd5e1'  // Soft Slate
+                    ],
+                    borderWidth: 6,
+                    borderColor: '#ffffff',
+                    hoverOffset: 25,
+                    hoverBorderColor: '#ffffff'
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                cutout: '75%',
+                layout: {
+                    padding: 20
+                },
+                plugins: {
+                    legend: {
+                        position: 'bottom',
+                        labels: {
+                            font: { family: 'Sarabun', size: 13, weight: 'bold' },
+                            padding: 25,
+                            usePointStyle: true,
+                            pointStyle: 'circle'
+                        }
+                    },
+                    tooltip: {
+                        backgroundColor: '#1e293b',
+                        titleFont: { family: 'Sarabun', size: 14, weight: 'bold' },
+                        bodyFont: { family: 'Sarabun', size: 13 },
+                        padding: 15,
+                        displayColors: false,
+                        callbacks: {
+                            label: function(context) {
+                                let label = context.dataset.label || '';
+                                if (label) label += ': ';
+                                label += '฿' + context.parsed.toLocaleString();
+                                return label;
+                            }
+                        }
+                    }
+                }
+            }
+        });
+    </script>
+</body>
+</html>

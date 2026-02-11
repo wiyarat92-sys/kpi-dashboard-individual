@@ -1,0 +1,278 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>KPI Dashboard - บริษัท พัฒนาสิน ไทยเทรดดิ้ง จำกัด</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;500;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Sarabun', sans-serif;
+            background-color: #f3f4f6;
+        }
+        .pass-bg { background-color: #d1fae5; color: #065f46; }
+        .fail-bg { background-color: #fee2e2; color: #991b1b; }
+        .status-dot { height: 10px; width: 10px; border-radius: 50%; display: inline-block; margin-right: 5px; }
+
+        @media print {
+            .no-print { display: none !important; }
+            body { background-color: white; padding: 0; }
+            .print-break-inside { break-inside: avoid; }
+            .print-mt { margin-top: 20px; }
+        }
+    </style>
+</head>
+<body class="p-4 md:p-8">
+
+    <div class="max-w-7xl mx-auto">
+        <!-- Header -->
+        <header class="bg-white rounded-lg shadow-sm p-6 mb-6 border-l-4 border-blue-600 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+            <div>
+                <h1 class="text-2xl font-bold text-gray-800">KPI Dashboard & Performance Report</h1>
+                <h2 class="text-xl text-blue-600 font-semibold mt-1">บริษัท พัฒนาสิน ไทยเทรดดิ้ง จำกัด</h2>
+                <p class="text-gray-500 mt-2">ประจำเดือน: <span class="font-bold text-gray-700">มกราคม 2026</span></p>
+            </div>
+            <button onclick="window.print()" class="no-print bg-gray-800 hover:bg-gray-700 text-white font-medium py-2 px-4 rounded-lg flex items-center transition-colors shadow-sm">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z" />
+                </svg>
+                พิมพ์รายงาน
+            </button>
+        </header>
+
+        <!-- Summary Cards -->
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+            <div class="bg-white p-4 rounded-lg shadow-sm flex items-center justify-between">
+                <div>
+                    <p class="text-gray-500 text-sm">รายการทั้งหมด</p>
+                    <p class="text-3xl font-bold text-gray-800" id="totalCount">0</p>
+                </div>
+                <div class="bg-blue-100 p-3 rounded-full text-blue-600">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" /></svg>
+                </div>
+            </div>
+            <div class="bg-white p-4 rounded-lg shadow-sm flex items-center justify-between border-b-4 border-green-500">
+                <div>
+                    <p class="text-gray-500 text-sm">ผ่านเกณฑ์ (Pass)</p>
+                    <p class="text-3xl font-bold text-green-600" id="passCount">0</p>
+                </div>
+                <div class="bg-green-100 p-3 rounded-full text-green-600">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" /></svg>
+                </div>
+            </div>
+            <div class="bg-white p-4 rounded-lg shadow-sm flex items-center justify-between border-b-4 border-red-500">
+                <div>
+                    <p class="text-gray-500 text-sm">ไม่ผ่านเกณฑ์ (Fail)</p>
+                    <p class="text-3xl font-bold text-red-600" id="failCount">0</p>
+                </div>
+                <div class="bg-red-100 p-3 rounded-full text-red-600">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" /></svg>
+                </div>
+            </div>
+        </div>
+
+        <!-- Charts Section -->
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6 print-break-inside">
+            <!-- Financial Chart -->
+            <div class="bg-white p-4 rounded-lg shadow-sm border border-gray-100">
+                <h3 class="text-lg font-semibold text-gray-700 mb-4">ประสิทธิภาพยอดขาย (Sales Performance)</h3>
+                <canvas id="salesChart"></canvas>
+            </div>
+            
+            <!-- Fuel Chart -->
+            <div class="bg-white p-4 rounded-lg shadow-sm border border-gray-100">
+                <h3 class="text-lg font-semibold text-gray-700 mb-4">ประสิทธิภาพการใช้เชื้อเพลิง (Fuel Efficiency)</h3>
+                <canvas id="fuelChart"></canvas>
+            </div>
+
+            <!-- Error Chart -->
+            <div class="bg-white p-4 rounded-lg shadow-sm border border-gray-100">
+                <h3 class="text-lg font-semibold text-gray-700 mb-4">ข้อผิดพลาดในการจัดส่ง (Delivery Errors)</h3>
+                <canvas id="errorChart"></canvas>
+            </div>
+
+             <!-- Status Distribution -->
+             <div class="bg-white p-4 rounded-lg shadow-sm border border-gray-100 flex flex-col items-center justify-center">
+                <h3 class="text-lg font-semibold text-gray-700 mb-4 w-full text-left">ภาพรวมสถานะ KPI</h3>
+                <div class="w-2/3">
+                    <canvas id="statusChart"></canvas>
+                </div>
+            </div>
+        </div>
+
+        <!-- Detailed Table -->
+        <div class="bg-white rounded-lg shadow overflow-hidden print-mt">
+            <div class="px-6 py-4 border-b border-gray-200">
+                <h3 class="text-lg font-semibold text-gray-800">ตารางสรุปผลการดำเนินงานโดยละเอียด</h3>
+            </div>
+            <div class="overflow-x-auto">
+                <table class="min-w-full divide-y divide-gray-200">
+                    <thead class="bg-gray-50">
+                        <tr>
+                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">KPI / ตัวชี้วัด</th>
+                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">ผู้รับผิดชอบ</th>
+                            <th scope="col" class="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">เป้าหมาย (Target)</th>
+                            <th scope="col" class="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">ทำได้จริง (Actual)</th>
+                            <th scope="col" class="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">สถานะ</th>
+                        </tr>
+                    </thead>
+                    <tbody class="bg-white divide-y divide-gray-200" id="kpiTableBody">
+                        <!-- JS generated rows will go here -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        
+        <div class="mt-4 text-center text-gray-400 text-sm mb-8">
+            Generated via AI Assistant | ข้อมูล ณ วันที่ 7 กุมภาพันธ์ 2026
+        </div>
+    </div>
+
+    <script>
+        // Data Structure
+        const kpiData = [
+            { name: "ยอดขายลูกค้า Online", responsible: "ผจก.ฝ่ายบริหาร", targetDesc: "> 6M", targetVal: 6000000, actualVal: 668691, type: "more_is_better", unit: "บาท", category: "sales" },
+            { name: "ยอดขายสินค้าใหม่", responsible: "ผจก.ฝ่ายบริหาร", targetDesc: "> 6M", targetVal: 6000000, actualVal: 2943, type: "more_is_better", unit: "บาท", category: "sales" },
+            { name: "ฝึกอบรมพนักงาน", responsible: "ผจก.ฝ่ายบริหาร", targetDesc: "> 90%", targetVal: 90, actualVal: 100, type: "more_is_better", unit: "%", category: "hr" },
+            { name: "ยอดขายลูกค้าใหม่ (Net Income)", responsible: "ผจก.ฝ่ายปฏิบัติการ", targetDesc: "> 12M", targetVal: 12000000, actualVal: 127906, type: "more_is_better", unit: "บาท", category: "sales" },
+            { name: "ติดตามชำระหนี้ทันกำหนด", responsible: "หน.บัญชี/การเงิน", targetDesc: "> 80%", targetVal: 80, actualVal: 77, type: "more_is_better", unit: "%", category: "finance" },
+            { name: "ยอดขายปลีกหน้าร้าน", responsible: "หน.แผนกขาย", targetDesc: "> 6M", targetVal: 6000000, actualVal: 504113, type: "more_is_better", unit: "บาท", category: "sales" },
+            { name: "สินค้าคงคลัง-หน้าร้านถูกต้อง", responsible: "พนง.ขายปลีก", targetDesc: "> 90%", targetVal: 90, actualVal: 69, type: "more_is_better", unit: "%", category: "inventory" },
+            { name: "ยอดขายส่ง", responsible: "หน.แผนกขาย", targetDesc: "> 130M", targetVal: 130000000, actualVal: 11406730, type: "more_is_better", unit: "บาท", category: "sales" },
+            { name: "ยอดขาย-หนองคาย", responsible: "หน.ขาย หนองคาย", targetDesc: "> 7M", targetVal: 7000000, actualVal: 1014780.30, type: "more_is_better", unit: "บาท", category: "sales" },
+            { name: "สินค้าคงคลัง-หนองคายถูกต้อง", responsible: "หน.ขาย หนองคาย", targetDesc: "> 95%", targetVal: 95, actualVal: 88, type: "more_is_better", unit: "%", category: "inventory" },
+            { name: "ประสิทธิภาพรถบรรทุก", responsible: "หน.คลังสินค้า", targetDesc: "> 85%", targetVal: 85, actualVal: 87.95, type: "more_is_better", unit: "%", category: "logistics" },
+            { name: "สินค้าคงคลัง-คลังถูกต้อง", responsible: "หน.คลังสินค้า", targetDesc: "> 85%", targetVal: 85, actualVal: 72, type: "more_is_better", unit: "%", category: "inventory" },
+            
+            // Errors
+            { name: "ข้อผิดพลาดสื่อสาร (ขายส่ง)", responsible: "พนง.ขายส่ง", targetDesc: "<= 2", targetVal: 2, actualVal: 4, type: "less_is_better", unit: "ครั้ง", category: "error" },
+            { name: "ผิดพลาดจัดส่ง (ไชยา)", responsible: "ไชยา", targetDesc: "<= 2", targetVal: 2, actualVal: 0, type: "less_is_better", unit: "ครั้ง", category: "error", shortName: "ไชยา" },
+            { name: "ผิดพลาดจัดส่ง (สุมาต)", responsible: "สุมาต", targetDesc: "<= 2", targetVal: 2, actualVal: 0, type: "less_is_better", unit: "ครั้ง", category: "error", shortName: "สุมาต" },
+            { name: "ผิดพลาดจัดส่ง (หนุ่ย)", responsible: "หนุ่ย", targetDesc: "<= 2", targetVal: 2, actualVal: 1, type: "less_is_better", unit: "ครั้ง", category: "error", shortName: "หนุ่ย" },
+            { name: "ผิดพลาดจัดส่ง (สุรชัย)", responsible: "สุรชัย", targetDesc: "<= 2", targetVal: 2, actualVal: 0, type: "less_is_better", unit: "ครั้ง", category: "error", shortName: "สุรชัย" },
+            { name: "ผิดพลาดจัดส่ง (นาวี)", responsible: "นาวี", targetDesc: "<= 2", targetVal: 2, actualVal: 1, type: "less_is_better", unit: "ครั้ง", category: "error", shortName: "นาวี" },
+            { name: "ผิดพลาดจัดส่ง (วิชัย)", responsible: "วิชัย", targetDesc: "<= 2", targetVal: 2, actualVal: 1, type: "less_is_better", unit: "ครั้ง", category: "error", shortName: "วิชัย" },
+            { name: "ผิดพลาดจัดส่ง (บูรพา)", responsible: "บูรพา", targetDesc: "<= 2", targetVal: 2, actualVal: 0, type: "less_is_better", unit: "ครั้ง", category: "error", shortName: "บูรพา" },
+            { name: "ผิดพลาดจัดส่ง (ใย)", responsible: "ใย", targetDesc: "<= 2", targetVal: 2, actualVal: 0, type: "less_is_better", unit: "ครั้ง", category: "error", shortName: "ใย" },
+            { name: "ผิดพลาดจัดส่ง (เรืองยศ)", responsible: "เรืองยศ", targetDesc: "<= 2", targetVal: 2, actualVal: 0, type: "less_is_better", unit: "ครั้ง", category: "error", shortName: "เรืองยศ" },
+            { name: "ผิดพลาดจัดส่ง (N/A)", responsible: "N/A", targetDesc: "<= 2", targetVal: 2, actualVal: 0, type: "less_is_better", unit: "ครั้ง", category: "error", shortName: "N/A" },
+            
+            // Fuel
+            { name: "เชื้อเพลิง (บุญหนัก)", responsible: "บุญหนัก", targetDesc: "> 7.00", targetVal: 7.00, actualVal: 6.74, type: "more_is_better", unit: "km/ล", category: "fuel", shortName: "บุญหนัก" },
+            { name: "เชื้อเพลิง (ทำเงิน)", responsible: "ทำเงิน", targetDesc: "> 6.80", targetVal: 6.80, actualVal: 7.07, type: "more_is_better", unit: "km/ล", category: "fuel", shortName: "ทำเงิน" },
+            { name: "เชื้อเพลิง (พี่หมาน)", responsible: "พี่หมาน", targetDesc: "> 8.70", targetVal: 8.70, actualVal: 8.52, type: "more_is_better", unit: "km/ล", category: "fuel", shortName: "พี่หมาน" },
+            { name: "เชื้อเพลิง (นำโชค)", responsible: "นำโชค", targetDesc: "> 9.50", targetVal: 9.50, actualVal: 8.83, type: "more_is_better", unit: "km/ล", category: "fuel", shortName: "นำโชค" },
+            { name: "เชื้อเพลิง (ออมสิน)", responsible: "ออมสิน", targetDesc: "> 11.80", targetVal: 11.80, actualVal: 10.61, type: "more_is_better", unit: "km/ล", category: "fuel", shortName: "ออมสิน" }
+        ];
+
+        // Format Helper
+        const formatNumber = (num) => {
+            return num.toLocaleString('th-TH', { maximumFractionDigits: 2 });
+        };
+
+        // --- Render Table & Calculate Counts ---
+        const tableBody = document.getElementById('kpiTableBody');
+        let passCount = 0;
+        let failCount = 0;
+
+        kpiData.forEach((item, index) => {
+            let isPass = item.type === "more_is_better" ? item.actualVal >= item.targetVal : item.actualVal <= item.targetVal;
+
+            if (isPass) passCount++; else failCount++;
+            item.isPass = isPass; // Store for charts
+
+            const statusClass = isPass ? "bg-green-100 text-green-800" : "bg-red-100 text-red-800";
+            const statusText = isPass ? "ผ่าน" : "ไม่ผ่าน";
+            const statusDot = isPass ? "bg-green-500" : "bg-red-500";
+            const actualClass = isPass ? "text-green-700 font-semibold" : "text-red-600 font-semibold";
+
+            const row = `
+                <tr class="${index % 2 === 0 ? 'bg-white' : 'bg-gray-50'} hover:bg-gray-100 transition-colors">
+                    <td class="px-6 py-4"><div class="text-sm font-medium text-gray-900">${item.name}</div></td>
+                    <td class="px-6 py-4"><div class="text-sm text-gray-500">${item.responsible}</div></td>
+                    <td class="px-6 py-4 text-center"><div class="text-sm text-gray-600">${item.targetDesc}</div></td>
+                    <td class="px-6 py-4 text-center"><div class="text-sm ${actualClass}">${formatNumber(item.actualVal)} ${item.unit}</div></td>
+                    <td class="px-6 py-4 text-center whitespace-nowrap">
+                        <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${statusClass}">
+                            <span class="status-dot ${statusDot} mt-1.5 mr-1"></span> ${statusText}
+                        </span>
+                    </td>
+                </tr>
+            `;
+            tableBody.innerHTML += row;
+        });
+
+        document.getElementById('totalCount').innerText = kpiData.length;
+        document.getElementById('passCount').innerText = passCount;
+        document.getElementById('failCount').innerText = failCount;
+
+        // --- CHARTS CONFIGURATION ---
+        Chart.defaults.font.family = "'Sarabun', sans-serif";
+
+        // 1. Sales Chart (Selected Key Items)
+        const salesItems = kpiData.filter(d => d.category === 'sales').slice(0, 5); // Pick top 5 sales KPIs
+        new Chart(document.getElementById('salesChart'), {
+            type: 'bar',
+            data: {
+                labels: salesItems.map(d => d.name.replace('ยอดขาย', '')),
+                datasets: [
+                    { label: 'เป้าหมาย', data: salesItems.map(d => d.targetVal), backgroundColor: '#e5e7eb' },
+                    { label: 'ทำได้จริง', data: salesItems.map(d => d.actualVal), backgroundColor: '#3b82f6' }
+                ]
+            },
+            options: { responsive: true, scales: { y: { beginAtZero: true } } }
+        });
+
+        // 2. Fuel Chart
+        const fuelItems = kpiData.filter(d => d.category === 'fuel');
+        new Chart(document.getElementById('fuelChart'), {
+            type: 'line',
+            data: {
+                labels: fuelItems.map(d => d.shortName),
+                datasets: [
+                    { 
+                        label: 'ทำได้จริง (km/ลิตร)', 
+                        data: fuelItems.map(d => d.actualVal), 
+                        borderColor: '#10b981', backgroundColor: '#10b981', 
+                        tension: 0.1, fill: false 
+                    },
+                    { 
+                        label: 'เป้าหมาย', 
+                        data: fuelItems.map(d => d.targetVal), 
+                        borderColor: '#ef4444', borderDash: [5, 5], pointRadius: 0
+                    }
+                ]
+            }
+        });
+
+        // 3. Error Chart
+        const errorItems = kpiData.filter(d => d.category === 'error' && d.shortName);
+        new Chart(document.getElementById('errorChart'), {
+            type: 'bar',
+            data: {
+                labels: errorItems.map(d => d.shortName),
+                datasets: [{
+                    label: 'จำนวนครั้งที่ผิดพลาด',
+                    data: errorItems.map(d => d.actualVal),
+                    backgroundColor: errorItems.map(d => d.actualVal > 2 ? '#ef4444' : '#f59e0b')
+                }]
+            },
+            options: { indexAxis: 'y', scales: { x: { beginAtZero: true, suggestedMax: 4 } } }
+        });
+
+        // 4. Status Chart
+        new Chart(document.getElementById('statusChart'), {
+            type: 'doughnut',
+            data: {
+                labels: ['ผ่าน (Pass)', 'ไม่ผ่าน (Fail)'],
+                datasets: [{
+                    data: [passCount, failCount],
+                    backgroundColor: ['#10b981', '#ef4444']
+                }]
+            }
+        });
+    </script>
+</body>
+</html>
